@@ -22,6 +22,8 @@ class ChangeMinerSelectionPolicy(BaseComponent):
         self.no_op_planner_action_mask = [0 for _ in range(self.green_score_importance)]
 
     def get_additional_state_fields(self, agent_cls_name):
+        if agent_cls_name == "BasicPlanner":
+            return {"GreenScoreImportance": 0}
         return {}
 
     def additional_reset_steps(self):
@@ -33,14 +35,6 @@ class ChangeMinerSelectionPolicy(BaseComponent):
             return self.green_score_importance
         return None
 
-     # def generate_masks(self, completions=0):
-    #     if self.is_first_step:
-    #         self.is_first_step = False
-    #         if self.mask_first_step:
-    #             return self.common_mask_off
-
-    #     return self.common_mask_on
-
     def generate_masks(self, completions=0):
         masks = {}
         if self.world.timestep % self.policy_interval == 0:
@@ -51,13 +45,14 @@ class ChangeMinerSelectionPolicy(BaseComponent):
 
     def component_step(self):
         planner_action = self.world.planner.get_component_action(self.name)
-        if 0 <= planner_action <= self.green_score_importance:
-            if self.world.timestep % self.policy_interval == 0:
-                green_score_importance = planner_action * 0.05
-                reliability_score_importance = 1 - green_score_importance
-                for agent in self.world.get_random_order_agents():
-                    agent.state["endogenous"]["TotalScore"] = (green_score_importance * agent.state["endogenous"]["GreenScore"]) + (reliability_score_importance * agent.state["endogenous"]["ReliabilityScore"])
+        if planner_action == 0:
+            # the importance is not being changed
+            pass
 
+        elif 1 <= planner_action <= self.green_score_importance:
+            green_score_importance = planner_action * 0.05
+            self.world.planner.state["GreenScoreImportance"] = green_score_importance
+            
         else: # We only declared 20 actions for this agent type, so action > 20 is an error.
             raise ValueError
 

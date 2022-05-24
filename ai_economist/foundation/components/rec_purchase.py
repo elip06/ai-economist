@@ -59,6 +59,9 @@ class BuyRECFromVirtualStore(BaseComponent):
                 agent.state["endogenous"]["GreenScoresLastDay"]= np.append(agent.state["endogenous"]["GreenScoresLastDay"], new_green_score)
                 agent.state["endogenous"]["GreenScore"] = np.mean(agent.state["endogenous"]["GreenScoresLastDay"])
                 agent.state["endogenous"]["RECsPrice"] = self.rec_price * agent.state["endogenous"]["ConsumedEnergy"] * recs_percentage
+                green_score_importance = self.world.planner.state["GreenScoreImportance"]
+                reliability_score_importance = 1 - green_score_importance
+                agent.state["endogenous"]["TotalScore"] = (green_score_importance * agent.state["endogenous"]["GreenScore"]) + (reliability_score_importance * agent.state["endogenous"]["ReliabilityScore"])
 
             else: # We only declared 20 actions for this agent type, so action > 20 is an error.
                 raise ValueError

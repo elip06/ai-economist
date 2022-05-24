@@ -63,7 +63,7 @@ class FilecoinEnergy(BaseEnvironment):
             #agent.state["inventory"] = {k: 0 for k in agent.state["inventory"].keys()}
 
             # Draw Reliability score from distribution
-            agent.state["endogenous"]["ReliabilityScore"] = np.random.choice(self.rel_scores['score'], p=self.rel_scores['prob'])
+            agent.state["endogenous"]["ReliabilityScore"] = np.random.choice(self.rel_scores['score'], p=self.rel_scores['prob']) / 100
             agent.state["endogenous"]["TotalScore"] = agent.state["endogenous"]["ReliabilityScore"]
 
             # Decide agent location to start with, which determines energy costs per kWh and initial green score
