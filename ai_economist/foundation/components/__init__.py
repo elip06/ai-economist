@@ -13,6 +13,8 @@ from . import (
     move,
     redistribution,
     simple_labor,
+    change_policy,
+    rec_purchase
 )
 
 # Import files that add Component class(es) to component_registry
