@@ -289,9 +289,9 @@ class BaseEnvironment(ABC):
         # Initialize the set of entities used in the game that's being created.
         # Coin and Labor are always included.
         self._entities = {
-            "resources": ["Coin"],
+            "resources": [],
             "landmarks": [],
-            "endogenous": ["Labor"],
+            "endogenous": [],
         }
         self._register_entities(self.required_entities)
 
