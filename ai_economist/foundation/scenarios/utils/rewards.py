@@ -131,3 +131,43 @@ def inv_income_weighted_utility(coin_endowments, utilities):
     pareto_weights = 1 / np.maximum(coin_endowments, 1)
     pareto_weights = pareto_weights / np.sum(pareto_weights)
     return np.sum(utilities * pareto_weights)
+
+
+def filecoin_minus_energy_costs(new_data, total_data, energy_price, rec_costs):
+    # TODO figure out actual block rewards and storage fees
+    storage_fees = 3.057e-19
+    block_rewards = 0
+    if new_data > 0:
+        block_rewards = 183.5
+    total_rewards = block_rewards + total_data * storage_fees
+    total_energy = calculateEnergyConsumption(new_data, total_data)
+    total_costs = ( total_energy * energy_price) + rec_costs
+    return total_rewards - total_costs
+
+
+def calculateEnergyConsumption(new_data, total_data):
+    A = 3.42e-08
+    B = 3e-12
+    pue = 1.57
+    sealing_energy = A * new_data
+    storing_energy = B * total_data
+    total_energy = (sealing_energy + storing_energy) * pue
+    # divide by 1000 to work with kW
+    return total_energy / 1000
+
+
+def reliability_plus_green_scores(agent_green_scores, agent_reliability_scores, agent_storage):
+    if np.sum(agent_storage) == 0:
+        return 0
+    else:
+        avg_green_score = green_scores(agent_green_scores, agent_storage)
+        avg_reliability_score = reliability_scores(agent_reliability_scores, agent_storage)
+        return avg_green_score + avg_reliability_score
+
+
+def reliability_scores(agent_reliability_scores, agent_storage):
+    return np.sum(agent_reliability_scores * agent_storage) / np.sum(agent_storage)
+
+
+def green_scores(agent_green_scores, agent_storage): 
+    return np.sum(agent_green_scores * agent_storage) / np.sum(agent_storage)
