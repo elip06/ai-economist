@@ -50,8 +50,9 @@ class ChangeMinerSelectionPolicy(BaseComponent):
             pass
 
         elif 1 <= planner_action <= self.green_score_importance:
-            green_score_importance = planner_action * 0.05
-            self.world.planner.state["GreenScoreImportance"] = green_score_importance
+            if (self.world.timestep - 1) % self.policy_interval == 0:
+                green_score_importance = planner_action * 0.05
+                self.world.planner.state["GreenScoreImportance"] = green_score_importance
             
         else: # We only declared 20 actions for this agent type, so action > 20 is an error.
             raise ValueError

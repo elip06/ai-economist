@@ -29,7 +29,7 @@ class FilecoinEnergy(BaseEnvironment):
         self.countries = pd.read_csv('utils/country_probs.csv', sep=";")
         self.rel_scores = pd.read_csv('utils/miner_scores_dist.csv')
 
-        self.curr_optimization_metrics = {str(a.idx): 0 for a in self.all_agents}
+        self.curr_optimization_metrics = {str(a.idx): 0.0 for a in self.all_agents}
 
 
 
@@ -57,7 +57,7 @@ class FilecoinEnergy(BaseEnvironment):
         for agent in self.world.agents:
 
             # This will set consumed energy, RECs costs, etc. to 0
-            agent.state["endogenous"] = {k: 0 for k in agent.state["endogenous"].keys()}
+            agent.state["endogenous"] = {k: 0.0 for k in agent.state["endogenous"].keys()}
 
             # This will set TotalData and NewData to 0 
             #agent.state["inventory"] = {k: 0 for k in agent.state["inventory"].keys()}
@@ -97,9 +97,9 @@ class FilecoinEnergy(BaseEnvironment):
         for agent in self.world.agents:
             # calculate new storage added
             if agent.idx in chosen_agents:
-                agent.state["endogenous"]["NewData"] = 32e+9
+                agent.state["endogenous"]["NewData"] = 32.0
             else:
-                agent.state["endogenous"]["NewData"] = 0
+                agent.state["endogenous"]["NewData"] = 0.0
 
             # update total storage
             agent.state["endogenous"]["TotalData"] += agent.state["endogenous"]["NewData"]

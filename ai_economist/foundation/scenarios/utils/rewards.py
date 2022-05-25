@@ -146,8 +146,9 @@ def filecoin_minus_energy_costs(new_data, total_data, energy_price, rec_costs):
 
 
 def calculateEnergyConsumption(new_data, total_data):
-    A = 3.42e-08
-    B = 3e-12
+    # data is in GB
+    A = 3.42e+01
+    B = 3e-3
     pue = 1.57
     sealing_energy = A * new_data
     storing_energy = B * total_data
@@ -158,7 +159,7 @@ def calculateEnergyConsumption(new_data, total_data):
 
 def reliability_plus_green_scores(agent_green_scores, agent_reliability_scores, agent_storage):
     if np.sum(agent_storage) == 0:
-        return 0
+        return 0.0
     else:
         avg_green_score = green_scores(agent_green_scores, agent_storage)
         avg_reliability_score = reliability_scores(agent_reliability_scores, agent_storage)
@@ -166,8 +167,12 @@ def reliability_plus_green_scores(agent_green_scores, agent_reliability_scores, 
 
 
 def reliability_scores(agent_reliability_scores, agent_storage):
+    if np.sum(agent_storage) == 0:
+        return 0.0
     return np.sum(agent_reliability_scores * agent_storage) / np.sum(agent_storage)
 
 
-def green_scores(agent_green_scores, agent_storage): 
+def green_scores(agent_green_scores, agent_storage):
+    if np.sum(agent_storage) == 0:
+        return 0.0
     return np.sum(agent_green_scores * agent_storage) / np.sum(agent_storage)
