@@ -269,17 +269,30 @@ class FilecoinEnergy(BaseEnvironment):
         agent_storage = np.array(
             [agent.state["endogenous"]["TotalData"] for agent in agents]
         )
-
-        # Optimization metric for agents:
+        max_reward = 0
         for agent in agents:
-            curr_optimization_metric[
-                agent.idx
-            ] = rewards.filecoin_minus_energy_costs(
+            curr_reward = rewards.filecoin_minus_energy_costs(
                 agent.state["endogenous"]["NewData"],
                 agent.state["endogenous"]["TotalData"],
                 agent.state["endogenous"]["EnergyPrice"],
                 agent.state["endogenous"]["RECsPrice"]
             )
+            if curr_reward > max_reward:
+                max_reward = curr_reward
+        # Optimization metric for agents:
+        for agent in agents:
+            reward = rewards.filecoin_minus_energy_costs(
+                agent.state["endogenous"]["NewData"],
+                agent.state["endogenous"]["TotalData"],
+                agent.state["endogenous"]["EnergyPrice"],
+                agent.state["endogenous"]["RECsPrice"]
+            )
+            # scale rewards from 0 to 1, otherwise planner doesn't learn
+            if max_reward > 0:
+                reward /= max_reward
+            curr_optimization_metric[
+                agent.idx
+            ] = reward
         # Optimization metric for the planner:
 
         curr_optimization_metric[

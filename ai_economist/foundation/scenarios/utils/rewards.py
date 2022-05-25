@@ -163,7 +163,7 @@ def reliability_plus_green_scores(agent_green_scores, agent_reliability_scores, 
     else:
         avg_green_score = green_scores(agent_green_scores, agent_storage)
         avg_reliability_score = reliability_scores(agent_reliability_scores, agent_storage)
-        return avg_green_score + avg_reliability_score
+        return (avg_green_score + avg_reliability_score) / 2 
 
 
 def reliability_scores(agent_reliability_scores, agent_storage):
