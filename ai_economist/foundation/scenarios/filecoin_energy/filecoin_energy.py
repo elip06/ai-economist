@@ -143,7 +143,7 @@ class FilecoinEnergy(BaseEnvironment):
             [agent.state["endogenous"]["ReliabilityScore"] for agent in self.world.agents]
         )
         agent_storage = np.array(
-            [agent.state["endogenous"]["TotalData"] for agent in self.world.agents]
+            [agent.state["endogenous"]["NewData"] for agent in self.world.agents]
         )
         reliability = rewards.reliability_scores(agent_reliability_scores, agent_storage)
         renewables = rewards.green_scores(agent_green_scores, agent_storage)
@@ -219,7 +219,7 @@ class FilecoinEnergy(BaseEnvironment):
             [agent.state["endogenous"]["ReliabilityScore"] for agent in self.world.agents]
         )
         agent_storage = np.array(
-            [agent.state["endogenous"]["TotalData"] for agent in self.world.agents]
+            [agent.state["endogenous"]["NewData"] for agent in self.world.agents]
         )
         reliability = rewards.reliability_scores(agent_reliability_scores, agent_storage)
         renewables = rewards.green_scores(agent_green_scores, agent_storage)
@@ -267,7 +267,7 @@ class FilecoinEnergy(BaseEnvironment):
             [agent.state["endogenous"]["ReliabilityScore"] for agent in agents]
         )
         agent_storage = np.array(
-            [agent.state["endogenous"]["TotalData"] for agent in agents]
+            [agent.state["endogenous"]["NewData"] for agent in agents]
         )
         max_reward = 0
         for agent in agents:
