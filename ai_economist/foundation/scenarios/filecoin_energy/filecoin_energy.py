@@ -289,7 +289,7 @@ class FilecoinEnergy(BaseEnvironment):
             )
             # scale rewards from 0 to 1, otherwise planner doesn't learn
             if max_reward > 0:
-                reward /= max_reward
+                reward /= (max_reward * self.num_agents)
             curr_optimization_metric[
                 agent.idx
             ] = reward
