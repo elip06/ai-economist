@@ -22,13 +22,14 @@ class FilecoinEnergy(BaseEnvironment):
     def __init__(
         self,
         *base_env_args,
+        static = False,
         **base_env_kwargs
     ):
         super().__init__(*base_env_args, **base_env_kwargs)
         self.num_agents = len(self.world.agents)
         self.countries = pd.read_csv('utils/country_probs.csv', sep=";")
         self.rel_scores = pd.read_csv('utils/miner_scores_dist.csv')
-
+        self.static = static
         self.curr_optimization_metrics = {str(a.idx): 0.0 for a in self.all_agents}
 
 
@@ -54,6 +55,9 @@ class FilecoinEnergy(BaseEnvironment):
         """
         self.world.clear_agent_locs()
         
+        # set seed for reproducability
+        np.random.seed(0)
+        
         for agent in self.world.agents:
 
             # This will set consumed energy, RECs costs, etc. to 0
@@ -72,6 +76,9 @@ class FilecoinEnergy(BaseEnvironment):
             agent.state["endogenous"]['GreenScoresLastDay'] = np.full((24,), self.countries['renewables_percentage'][country])
             agent.state["endogenous"]["GreenScore"] = np.mean(agent.state["endogenous"]["GreenScoresLastDay"])
             agent.state["endogenous"]["InitialGreenScore"] = self.countries['renewables_percentage'][country]
+            
+            # Consumed Energy for the past 24h, 0 in the beginning
+            agent.state["endogenous"]['ConsumedEnergy'] = np.full((24,), 0.0)
 
 
     def scenario_step(self):
@@ -97,7 +104,7 @@ class FilecoinEnergy(BaseEnvironment):
         for agent in self.world.agents:
             # calculate new storage added
             if agent.idx in chosen_agents:
-                agent.state["endogenous"]["NewData"] = 32.0
+                agent.state["endogenous"]["NewData"] = 1024.0
             else:
                 agent.state["endogenous"]["NewData"] = 0.0
 
@@ -105,7 +112,9 @@ class FilecoinEnergy(BaseEnvironment):
             agent.state["endogenous"]["TotalData"] += agent.state["endogenous"]["NewData"]
 
             # calculate energy consumed this step
-            agent.state["endogenous"]["ConsumedEnergy"] = rewards.calculateEnergyConsumption(agent.state["endogenous"]["NewData"], agent.state["endogenous"]["TotalData"])
+            energy_consumption = rewards.calculateEnergyConsumption(agent.state["endogenous"]["NewData"], agent.state["endogenous"]["TotalData"])
+            agent.state["endogenous"]["ConsumedEnergy"] = agent.state["endogenous"]["ConsumedEnergy"][1:]
+            agent.state["endogenous"]["ConsumedEnergy"] = np.append(agent.state["endogenous"]["ConsumedEnergy"], energy_consumption)
 
 
 
@@ -145,12 +154,13 @@ class FilecoinEnergy(BaseEnvironment):
         agent_storage = np.array(
             [agent.state["endogenous"]["NewData"] for agent in self.world.agents]
         )
-        reliability = rewards.reliability_scores(agent_reliability_scores, agent_storage)
-        renewables = rewards.green_scores(agent_green_scores, agent_storage)
-        obs_dict[self.world.planner.idx] = {
-            "reliability": reliability,
-            "renewables": renewables,
-        }
+        if not self.static:
+            reliability = rewards.reliability_scores(agent_reliability_scores, agent_storage)
+            renewables = rewards.green_scores(agent_green_scores, agent_storage)
+            obs_dict[self.world.planner.idx] = {
+                "reliability": reliability,
+                "renewables": renewables,
+            }
 
         return obs_dict
 
@@ -174,7 +184,7 @@ class FilecoinEnergy(BaseEnvironment):
             self.world.agents
         )
         planner_agents_rew = {
-            k: v - self.curr_optimization_metrics[k]
+            k: v
             for k, v in curr_optimization_metrics.items()
         }
         self.curr_optimization_metrics = curr_optimization_metrics
@@ -224,28 +234,10 @@ class FilecoinEnergy(BaseEnvironment):
         reliability = rewards.reliability_scores(agent_reliability_scores, agent_storage)
         renewables = rewards.green_scores(agent_green_scores, agent_storage)
 
-        metrics["system/reliability"] = reliability
-        metrics["system/greenness"] = renewables
-
-        # Log average endogenous, and utility for agents
-        agent_endogenous = {}
-        agent_utilities = []
-        for agent in self.world.agents:
-            for endogenous, quantity in agent.endogenous.items():
-                if endogenous not in agent_endogenous:
-                    agent_endogenous[endogenous] = []
-                agent_endogenous[endogenous].append(quantity)
-
-            agent_utilities.append(self.curr_optimization_metrics[agent.idx])
-
-        for endogenous, quantities in agent_endogenous.items():
-            metrics["endogenous/avg_agent/{}".format(endogenous)] = np.mean(quantities)
-
-        metrics["util/avg_agent"] = np.mean(agent_utilities)
-
-        # Log utility for the planner
-
-        metrics["util/p"] = self.curr_optimization_metrics[self.world.planner.idx]
+        if not self.static:
+            metrics["system/reliability"] = reliability
+            metrics["system/greenness"] = renewables
+            metrics["util/p"] = self.curr_optimization_metrics[self.world.planner.idx]
 
         return metrics
 
@@ -294,12 +286,13 @@ class FilecoinEnergy(BaseEnvironment):
                 agent.idx
             ] = reward
         # Optimization metric for the planner:
-
-        curr_optimization_metric[
-            self.world.planner.idx
-        ] = rewards.reliability_plus_green_scores(
-                agent_green_scores,
-                agent_reliability_scores,
-                agent_storage
-            )
+        curr_optimization_metric[self.world.planner.idx] = 1.0
+        if not self.static: 
+            curr_optimization_metric[
+                self.world.planner.idx
+            ] = rewards.reliability_plus_green_scores(
+                    agent_green_scores,
+                    agent_reliability_scores,
+                    agent_storage
+                )
         return curr_optimization_metric

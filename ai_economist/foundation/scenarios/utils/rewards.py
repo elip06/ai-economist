@@ -147,9 +147,9 @@ def filecoin_minus_energy_costs(new_data, total_data, energy_price, rec_costs):
 
 def calculateEnergyConsumption(new_data, total_data):
     # data is in GB
-    A = 3.42e+01
-    B = 3e-3
-    pue = 1.57
+    A = 5.6e+01
+    B = 8.1e-3
+    pue = 1.93
     sealing_energy = A * new_data
     storing_energy = B * total_data
     total_energy = (sealing_energy + storing_energy) * pue
