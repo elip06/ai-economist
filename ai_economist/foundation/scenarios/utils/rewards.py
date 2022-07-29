@@ -134,11 +134,15 @@ def inv_income_weighted_utility(coin_endowments, utilities):
 
 
 def filecoin_minus_energy_costs(new_data, total_data, energy_price, rec_costs):
-    # TODO figure out actual block rewards and storage fees
-    storage_fees = 3.057e-19
+    # calculate the reward of individual miners
+    storage_fees = 3.057e-10
     block_rewards = 0
+    
+    # a block reward is granted only if new data is added
     if new_data > 0:
         block_rewards = 183.5
+        
+    # substract costs from total rewards to get final profit
     total_rewards = block_rewards + total_data * storage_fees
     total_energy = calculateEnergyConsumption(new_data, total_data)
     total_costs = ( total_energy * energy_price) + rec_costs
@@ -146,6 +150,7 @@ def filecoin_minus_energy_costs(new_data, total_data, energy_price, rec_costs):
 
 
 def calculateEnergyConsumption(new_data, total_data):
+    # calculate energy consumption using Filecoin Green methodology
     # data is in GB
     A = 5.6e+01
     B = 8.1e-3
@@ -158,6 +163,7 @@ def calculateEnergyConsumption(new_data, total_data):
 
 
 def reliability_plus_green_scores(agent_green_scores, agent_reliability_scores, agent_storage):
+    # calculate system reward
     if np.sum(agent_storage) == 0:
         return 0.0
     else:
@@ -167,12 +173,14 @@ def reliability_plus_green_scores(agent_green_scores, agent_reliability_scores, 
 
 
 def reliability_scores(agent_reliability_scores, agent_storage):
+    # weighted avg of the rel scores of agents
     if np.sum(agent_storage) == 0:
         return 0.0
     return np.sum(agent_reliability_scores * agent_storage) / np.sum(agent_storage)
 
 
 def green_scores(agent_green_scores, agent_storage):
+    # weighted avg of the green scores of agents
     if np.sum(agent_storage) == 0:
         return 0.0
     return np.sum(agent_green_scores * agent_storage) / np.sum(agent_storage)
